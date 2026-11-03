@@ -1,7 +1,33 @@
 import streamlit as st
+import pandas as pd
 
 from agent.core import ask_agent
 
+def render_monthly_rent_chart(evidence: list[dict]) -> None:
+    trend_call = next(
+        (item for item in evidence if item.get("tool") == "monthly_rent_trend"),
+        None,
+    )
+    if trend_call is None:
+        return
+
+    months = trend_call.get("result", {}).get("months", [])
+    if not months:
+        return
+
+    chart_data = pd.DataFrame(months).set_index("month")
+
+    st.caption(
+        "Monthly median weekly rent "
+        f"for postcode {trend_call['arguments']['postcode']}"
+    )
+    st.line_chart(
+        chart_data,
+        y="median_weekly_rent_aud",
+        x_label="Month",
+        y_label="Median weekly rent (AUD)",
+        alt="Monthly median weekly rent from 2025 rental bond lodgements",
+    )
 
 st.set_page_config(
     page_title="NSW Rent Insights Agent",
@@ -56,6 +82,9 @@ if question:
 
             answer = result.get("answer") or "No answer text was returned."
             st.markdown(answer)
+
+            # st.write(result["answer"])
+            render_monthly_rent_chart(result["evidence"])
 
             if result.get("evidence"):
                 with st.expander("See data and tool details"):

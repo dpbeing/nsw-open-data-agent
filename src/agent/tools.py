@@ -156,3 +156,79 @@ def median_rent_for_postcode(
         "median_weekly_rent_aud": float(median),
         "small_sample": lodgements < 10,
     }
+
+
+def monthly_rent_trend(
+        postcode: str,
+        dwelling_type: str,
+        bedrooms: int,
+) -> dict:
+    """Get monthly 2025 median weekly rents and lodgement counts for one postcode, type, and bedroom count."""
+    postcode = str(postcode).strip()
+
+    if not postcode.isdigit() or len(postcode) > 4:
+        return {"error": "Enter a valid four-digit postcode."}
+    postcode = postcode.zfill(4)
+
+    code = dwelling_type.strip().upper()
+    aliases = {
+        "HOUSE": "H",
+        "HOUSES": "H",
+        "FLAT": "F",
+        "UNIT": "F",
+        "TERRACE": "T",
+        "TOWNHOUSE": "T",
+        "OTHER": "O",
+    }
+    code = aliases.get(code, code)
+
+    if code not in {"F", "H", "T", "O"}:
+        return {"error": "Choose F, H, T, or O for dwelling type."}
+    if not isinstance(bedrooms, int) or not 0 <= bedrooms <= 20:
+        return {"error": "Bedrooms must be a whole number from 0 to 20."}
+
+    connection = duckdb.connect(str(DATABASE), read_only=True)
+    try:
+        rows = connection.execute(
+            """
+            SELECT
+                strftime(lodgement_date, '%Y-%m') AS month,
+                COUNT(*) AS lodgements,
+                ROUND(MEDIAN(weekly_rent), 2) AS median_weekly_rent
+            FROM rental_bonds
+            WHERE postcode = ?
+              AND dwelling_type = ?
+              AND bedrooms = ?
+              AND rent_status = 'valid'
+              AND lodgement_date >= DATE '2025-01-01'
+              AND lodgement_date < DATE '2026-01-01'
+            GROUP BY month
+            ORDER BY month
+            """,
+            [postcode, code, bedrooms],
+        ).fetchall()
+    finally:
+        connection.close()
+
+    if not rows:
+        return {
+            "postcode": postcode,
+            "message": "No matching records with valid rents were found.",
+            "months": [],
+        }
+
+    return {
+        "source": "NSW Fair Trading rental bond lodgements, 2025",
+        "postcode": postcode,
+        "dwelling_type": code,
+        "bedrooms": bedrooms,
+        "months": [
+            {
+                "month": month,
+                "lodgements": int(lodgements),
+                "median_weekly_rent_aud": float(median),
+                "small_sample": lodgements < 10,
+            }
+            for month, lodgements, median in rows
+        ],
+    }

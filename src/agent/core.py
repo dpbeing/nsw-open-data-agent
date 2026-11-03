@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from ollama import chat
-from agent.tools import rank_median_rents, median_rent_for_postcode
+from agent.tools import rank_median_rents, median_rent_for_postcode, monthly_rent_trend
 
 MODEL = "qwen3:8b"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -23,6 +23,10 @@ When it asks to rank postcodes, use rank_median_rents.
 The dataset measures bedrooms, not total rooms. If you interpret “rooms”
 as bedrooms, say so in the answer.
 
+For questions about how rent changed month by month in a postcode, use
+monthly_rent_trend. For a single postcode median, use
+median_rent_for_postcode. For ranking postcodes, use rank_median_rents.
+
 Use only the tool result for factual rent figures. Explain the filters,
 sample size, and that bond lodgements are not all current rental contracts.
 If the question cannot be answered with this tool, say so.
@@ -38,6 +42,7 @@ def ask_agent(question: str) -> dict:
     available_tools = {
         "rank_median_rents": rank_median_rents,
         "median_rent_for_postcode": median_rent_for_postcode,
+        "monthly_rent_trend": monthly_rent_trend,
     }
     tool_trace = []
 
