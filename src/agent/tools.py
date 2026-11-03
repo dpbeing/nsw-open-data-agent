@@ -3,10 +3,12 @@ import duckdb
 
 MODEL = "qwen3:8b"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DATABASE = PROJECT_ROOT / "data" / "processed" / "rental_bonds.duckdb"
-# DATABASE = (
-#         Path(__file__).resolve().parent / "data" / "processed" / "rental_bonds.duckdb"
-# )
+LOCAL_DATABASE = PROJECT_ROOT / "data" / "processed" / "rental_bonds.duckdb"
+DEMO_DATABASE = PROJECT_ROOT / "data" / "demo" / "rental_bonds.duckdb"
+DATABASE = LOCAL_DATABASE if LOCAL_DATABASE.exists() else DEMO_DATABASE
+
+if not DATABASE.is_file():
+    raise FileNotFoundError(f"Rental bonds database not found: {DATABASE}")
 
 SYSTEM_PROMPT = """
 You answer questions using NSW Fair Trading rental bond lodgements for 2025.
