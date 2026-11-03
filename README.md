@@ -53,13 +53,13 @@ Requirements: Python 3.12, Java 21, `uv`, and [Ollama](https://ollama.com/).
 3. Prepare the data:
 
    ```bash
-   uv run python src/nsw_open_data_agent/pipeline/prepare_data.py
+   uv run python src/pipeline/prepare_data.py
    ```
 
 4. Start the app:
 
    ```bash
-   uv run streamlit run src/nsw_open_data_agent/app.py
+   uv run streamlit run src/app.py
    ```
 
 The app uses the locally installed `qwen3:8b` Ollama model and the generated

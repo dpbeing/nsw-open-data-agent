@@ -1,7 +1,24 @@
+import os
 import streamlit as st
 import pandas as pd
 
 from agent.core import ask_agent
+
+def get_llm_settings() -> tuple[str, str | None]:
+    try:
+        provider = st.secrets.get(
+            "LLM_PROVIDER",
+            os.getenv("LLM_PROVIDER", "ollama"),
+        )
+        api_key = st.secrets.get(
+            "GROQ_API_KEY",
+            os.getenv("GROQ_API_KEY"),
+        )
+    except FileNotFoundError:
+        provider = os.getenv("LLM_PROVIDER", "ollama")
+        api_key = os.getenv("GROQ_API_KEY")
+
+    return provider, api_key
 
 def render_monthly_rent_chart(evidence: list[dict]) -> None:
     trend_call = next(
@@ -74,7 +91,8 @@ if question:
 
     with st.chat_message("assistant"):
         with st.spinner("Querying the local agent..."):
-            result = ask_agent(question)
+            provider, api_key = get_llm_settings()
+            result = ask_agent(question, provider=provider, api_key=api_key)
             print("Agent result:", repr(result))
 
             if isinstance(result, str):
@@ -82,8 +100,6 @@ if question:
 
             answer = result.get("answer") or "No answer text was returned."
             st.markdown(answer)
-
-            # st.write(result["answer"])
             render_monthly_rent_chart(result["evidence"])
 
             if result.get("evidence"):
