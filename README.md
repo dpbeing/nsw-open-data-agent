@@ -73,8 +73,7 @@ DuckDB database under `data/processed/`.
 ## Tech stack
 
 Python · PySpark · Parquet · DuckDB · Ollama · Qwen3 · Streamlit
-```
 
-The source description says these are bond lodgements reported by postcode and supplied at the beginning of a tenancy, so the README makes that limitation clear. 
+## App preview
 
-Save it and check IntelliJ’s Markdown preview. If one of the commands doesn’t match your moved file paths, paste the error and we’ll adjust it.
+![Monthly rental trend chart from the NSW Rental Bond Insights Agent](docs/screenshots/monthly-rent-trend.png)
